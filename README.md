@@ -65,7 +65,7 @@ yarn
 Run the tests by running 
 
 ``` bash
-yarn test:puppeteer
+yarn test:selenium
 ```
 
 When done, the products API will be running on  `http://localhost:8001/api/products`
