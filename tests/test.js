@@ -1,76 +1,123 @@
-'use strict';
+const {Browser, By, Key, until} = require("selenium-webdriver");
+const {suite} = require("selenium-webdriver/testing");
+var expect = require('chai').expect;
+const RsvpPage = require('../tests/pageObjects');
+const methods = require('../tests/methods');
 
-const puppeteer = require('puppeteer');
-var commonMethods = require("./methods");
-const devices = require('puppeteer/DeviceDescriptors');
-const iPhone = devices['iPhone X'];
+suite(function (env) {
 
-let page;
-let browser;
-
-beforeAll(async () => {
-    browser = await puppeteer.launch({headless: false});
-    page = await browser.newPage();
-});
-afterAll(() => {
-    browser.close();
-});
+    describe('The react app', function() {
 
 
-describe('basic example UI tests', async () => {
+        let driver;
+        let page;
 
-    it('has the correct page title', async () => {
-        await page.goto('http://localhost:3000');
-        const title = await page.title();
-        await expect(title).toBe('React App');
-    });
+        before(async () => {
+            driver = await env.builder().build();
+            page = await new RsvpPage(driver);
+            await page.open();
+        });
 
-    it('contains a heading displaying the amount of products found', async () => {
-        //extract the text content of a class element
-        const productsFound = await commonMethods.getTextContent(page, 'productsFound');
-        expect(productsFound).toContain('Product(s) found');
-    });
+        it('contains the correct page title', async () => {
+            let element = await driver.getTitle();
 
-    it('contains a feature to sort products', async () => {
-        const sortFeature = await commonMethods.getSelector(page, 'sortFeature');
-        expect(sortFeature).toBeTruthy();
-    });
+            expect(element).to.equal('React App');
+        });
 
-    it('contains a list of all sizes', async () => {
-        const sizes = await commonMethods.getTextContent(page, 'sizes');
-        expect(sizes).toContain('XS' + 'S' + 'M' + 'ML' + 'L' + 'XL' + 'XXL');
-    });
+        it('displays the amount of products found', async () => {
+            await driver.wait(until.elementLocated(page.locators.productsFound));
+            let element = await driver.findElement(page.locators.productsFound).getText();
+            expect(element).to.include('Product(s) found');
+        });
 
-    it('allows a user to filter by size', async () => {
-        let originalProductsFound = await commonMethods.stripNumberFromString(page, 'productsFound');
-        await commonMethods.clickElement(page, 'XS');
-        await page.waitFor(500);
-        let latestProductsFound = await commonMethods.stripNumberFromString(page, 'productsFound');
+        it('displays an empty trolley initially', async () => {
+            await driver.wait(until.elementLocated(page.locators.trolleyIcon));
+            let element = await driver.findElement(page.locators.trolleyIcon);
+            await element.click();
+            let emptyState = await driver.findElement(page.locators.emptyState).getText();
+            expect(emptyState).to.include('Add some product in the bag');
+            let closeTrolley = await driver.findElement(page.locators.closeTrolley);
+            await closeTrolley.click();
+        });
 
-        expect(originalProductsFound).toBeGreaterThan(latestProductsFound);
-    });
+        it('contains a feature to sort products', async () => {
+            await driver.wait(until.elementLocated(page.locators.sortFeature));
+            let sortFeature = driver.findElement(page.locators.sortFeature);
+            expect(sortFeature).to.exist;
+        });
 
-    it('displays an empty trolley initially', async () => {
-        await commonMethods.clickElement(page, 'trolleyIcon');
-        const trolleyContents = await commonMethods.getTextContent(page, 'emptyState');
-        expect(trolleyContents).toEqual('Add some product in the bag :)');
-        await commonMethods.clickElement(page, 'closeTrolley');
-    });
+        it('displays a list of sizes to filter by', async () => {
+            await driver.wait(until.elementLocated(page.locators.sizes));
+            let sizes = driver.findElement(page.locators.sizes);
+            expect(sizes).to.exist;
+        });
 
-    it('allows items to be added to the trolley', async () => {
-        await commonMethods.clickElement(page, 'addToTrolley');
-        const trolleyContents = await commonMethods.getElementLength(page, 'trolleyContents');
-        expect(trolleyContents).toEqual(1);
-        await commonMethods.clickElement(page, 'closeTrolley');
-    });
+        it('contains a list of all sizes', async () => {
+            await driver.wait(until.elementLocated(page.locators.sizes));
+            let sizes = await driver.findElement(page.locators.sizes).getText();
+            console.log(sizes);
+            expect(sizes).to.include('XXL');
+           // sizes.should('include', 'XS' + 'S' + 'M' + 'ML' + 'L' + 'XL' + 'XXL');
+        });
 
 
-    it('can be viewed on a mobile', async () => {
-        await page.emulate(iPhone);
-        // screenshot will be output to this path
-        const filePath = await './tests/screenshots/mobileScreenshot.png';
-        await page.screenshot({
-            path: filePath
+
+
+        it('allows a user to add an item to their trolley', async () => {
+            await driver.wait(until.elementLocated(page.locators.addToTrolley));
+            let addToTrolley = await driver.findElement(page.locators.addToTrolley);
+            let size = await driver.findElement(page.locators.XS);
+
+            await size.click();
+            await addToTrolley.click();
+
+            await driver.wait(until.elementLocated(page.locators.trolleyContents));
+            let trolleyContents = await driver.findElement(page.locators.trolleyContents).getText();
+            await console.log(trolleyContents);
+            expect(trolleyContents).to.include('Quantity: 1');
+        });
+
+        it.only('can be viewed on a mobile', async () => {
+
+            await driver.takeScreenshot();
+            // screenshot will be output to this path
+        });
+
+        after(async () => {
+            driver.quit();
         });
     });
+
+    // describe('the RSVP site', function() {
+    //
+    //     let driver;
+    //     let page;
+    //
+    //     before(async () => {
+    //         driver = await env.builder().build();
+    //         page = new RsvpPage(driver);
+    //         await page.open();
+    //     });
+    //
+    //     it('should have an invitee list', async () => {
+    //         let elements = await driver.findElements(page.locators.invitedList);
+    //         assert(elements.length > 0);
+    //     });
+    //
+    //     it('should have a registrar list', async () => {
+    //         let elements = await driver.findElements(page.locators.registrationForm);
+    //         assert(elements.length > 0);
+    //     });
+    //
+    //     it('should show invitees', async () => {
+    //         let list = await driver.findElement(page.locators.invitedList);
+    //         await driver.wait(until.elementLocated(page.locators.invitees));
+    //         let text = await list.getText();
+    //         assert(text.includes('Craig Dennis'));
+    //     });
+    //
+    //     after(async () => {
+    //         driver.quit();
+    //     });
+    // });
 });

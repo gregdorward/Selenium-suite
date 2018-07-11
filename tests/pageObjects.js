@@ -1,12 +1,27 @@
+const {Browser, By, Key, until} = require("selenium-webdriver");
 
-module.exports = new Map()
-    .set('productsFound', ".products-found")
-    .set('sortFeature', ".sort")
-    .set('sizes', ".filters")
-    .set('XS', "#root > div > main > div.filters > div:nth-child(2) > label > span")
-    .set('trolleyIcon', ".bag")
-    .set('emptyState', ".shelf-empty")
-    .set('addToTrolley', "#root > div > main > div.shelf-container > div:nth-child(2) > div.shelf-item__buy-btn")
-    .set('trolleyContents', ".float-cart__shelf-container")
-    .set('closeTrolley', ".float-cart__close-btn");
+const url = "http://localhost:3000";
+
+class rsvpPage {
+    constructor(driver){
+        this.driver = driver;
+        this.locators = {
+            productsFound: By.xpath('//*[@id="root"]/div/main/div[2]/div[1]/small/span'),
+            sortFeature: By.className('sort'),
+            sizes: By.className('filters'),
+            XS: By.xpath('//*[@id="root"]/div/main/div[1]/div[1]/label/span'),
+            trolleyIcon: By.className('bag'),
+            emptyState: By.className('shelf-empty'),
+            addToTrolley: By.xpath('//*[@id="root"]/div/main/div[2]/div[2]/div[4]'),
+            trolleyContents: By.className('float-cart__shelf-container'),
+            closeTrolley: By.className('float-cart__close-btn'),
+
+        };
+    }
+    open() {
+        this.driver.get(url);
+    }
+}
+
+module.exports = rsvpPage;
 
