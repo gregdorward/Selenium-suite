@@ -1,4 +1,5 @@
-let elements = require("./pageObjects");
+const selectors = require('../tests/pageObjects');
+
 
 
 module.exports = {
@@ -7,9 +8,9 @@ module.exports = {
         return link;
     },
     async getTextContent(page, selector) {
-        let element = await elements.get(selector);
-        await page.waitForSelector(element);
-        return await page.$eval(element, el => el.textContent);
+ //       await driver.wait(until.elementLocated(`driver.locators.${selector}`));
+        let element = await page.findElement(`page.locators.${selector}`).getText();
+        return element
     },
     async getSelector(page, selector) {
         let element = await elements.get(selector);
